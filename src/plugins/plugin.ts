@@ -1,7 +1,31 @@
-import type { HyperPlugin, PluginContext, RequestContext } from "@hyperttp/types";
+import type { HyperPlugin, PluginOnRequestResult, SendRequest } from "@hyperttp/types";
 import { contentDigest } from "./contentDigest.js";
 import { hmacSigner } from "./hmacSigner.js";
 import type { HttpRequestInput, WithCryptoOptions } from "../types/index.js";
+
+/**
+ * @ru Проверяет, что вход плагина содержит минимальные данные HTTP-запроса для криптографической обработки.
+ * @en Checks whether the plugin input contains the minimum HTTP request data for cryptographic processing.
+ */
+function isCryptoRequest(request: SendRequest<unknown>): boolean {
+  const input = request.input;
+  return (
+    typeof input === "object" &&
+    input !== null &&
+    "url" in input &&
+    typeof input.url === "string" &&
+    "method" in input &&
+    typeof input.method === "string"
+  );
+}
+
+/**
+ * @ru Адаптирует строго типизированный результат криптографического плагина к базовому контракту HyperTTP.
+ * @en Adapts a strictly typed crypto-plugin result to the base HyperTTP contract.
+ */
+function asPluginResult(result: PluginOnRequestResult<HttpRequestInput>): PluginOnRequestResult {
+  return result as PluginOnRequestResult;
+}
 
 /**
  * @ru Объединяет генерацию Content-Digest и опциональную HMAC-подпись в один
@@ -28,20 +52,25 @@ import type { HttpRequestInput, WithCryptoOptions } from "../types/index.js";
  * @param options Plugin configuration for Digest generation and HMAC signing.
  * @returns A single HyperTTP plugin that calculates Digest before signing.
  */
-export function withCrypto(options: WithCryptoOptions = {}): HyperPlugin<HttpRequestInput> {
+export function withCrypto(options: WithCryptoOptions = {}): HyperPlugin {
   const digestPlugin = options.digest === false ? undefined : contentDigest(options.digest);
   const hmacPlugin = options.hmac ? hmacSigner(options.hmac) : undefined;
 
   return {
     name: "hyperttp-crypto",
     phase: "FORMAT",
-    async onRequest(request, context?: PluginContext, requestContext?: RequestContext) {
-      const digested = digestPlugin?.onRequest
-        ? await digestPlugin.onRequest(request, context, requestContext)
-        : request;
-      if (!digested || !("input" in digested) || !hmacPlugin?.onRequest) return digested;
+    async onRequest(request, context, requestContext) {
+      if (!isCryptoRequest(request)) return request;
 
-      return hmacPlugin.onRequest(digested, context, requestContext);
+      const cryptoRequest = request as unknown as SendRequest<HttpRequestInput>;
+      const digested = digestPlugin?.onRequest
+        ? await digestPlugin.onRequest(cryptoRequest, context, requestContext)
+        : cryptoRequest;
+      if (!digested || !("input" in digested) || !hmacPlugin?.onRequest) {
+        return asPluginResult(digested);
+      }
+
+      return asPluginResult(await hmacPlugin.onRequest(digested, context, requestContext));
     },
   };
 }
