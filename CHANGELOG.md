@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.2] — 2026-08-30
+
+### Added
+
+- Module augmentation for `HyperClientOptions.crypto`, accepting `WithCryptoOptions` directly in HyperTTP client configuration.
+
+### Changed
+
+- `withCrypto()` now uses `context.config.crypto` when no explicit plugin options are provided.
+- Explicit `withCrypto(options)` configuration takes precedence over `HyperClientOptions.crypto`.
+
 ## [1.0.1] — 2026-08-30
 
 ### Changed

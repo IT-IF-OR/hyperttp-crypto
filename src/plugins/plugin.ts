@@ -3,6 +3,12 @@ import { contentDigest } from "./contentDigest.js";
 import { hmacSigner } from "./hmacSigner.js";
 import type { HttpRequestInput, WithCryptoOptions } from "../types/index.js";
 
+declare module "@hyperttp/types" {
+  interface HyperClientOptions {
+    crypto?: WithCryptoOptions;
+  }
+}
+
 /**
  * @ru Проверяет, что вход плагина содержит минимальные данные HTTP-запроса для криптографической обработки.
  * @en Checks whether the plugin input contains the minimum HTTP request data for cryptographic processing.
@@ -52,16 +58,29 @@ function asPluginResult(result: PluginOnRequestResult<HttpRequestInput>): Plugin
  * @param options Plugin configuration for Digest generation and HMAC signing.
  * @returns A single HyperTTP plugin that calculates Digest before signing.
  */
-export function withCrypto(options: WithCryptoOptions = {}): HyperPlugin {
-  const digestPlugin = options.digest === false ? undefined : contentDigest(options.digest);
-  const hmacPlugin = options.hmac ? hmacSigner(options.hmac) : undefined;
+export function withCrypto(options?: WithCryptoOptions): HyperPlugin {
+  let configuredOptions: WithCryptoOptions | undefined;
+  let digestPlugin: ReturnType<typeof contentDigest> | undefined;
+  let hmacPlugin: ReturnType<typeof hmacSigner> | undefined;
+
+  function configure(nextOptions: WithCryptoOptions): void {
+    if (configuredOptions === nextOptions) return;
+
+    configuredOptions = nextOptions;
+    digestPlugin = nextOptions.digest === false ? undefined : contentDigest(nextOptions.digest);
+    hmacPlugin = nextOptions.hmac ? hmacSigner(nextOptions.hmac) : undefined;
+  }
 
   return {
     name: "hyperttp-crypto",
     phase: "FORMAT",
+    setup(context) {
+      configure(options ?? context.config.crypto ?? {});
+    },
     async onRequest(request, context, requestContext) {
       if (!isCryptoRequest(request)) return request;
 
+      configure(options ?? context?.config.crypto ?? {});
       const cryptoRequest = request as unknown as SendRequest<HttpRequestInput>;
       const digested = digestPlugin?.onRequest
         ? await digestPlugin.onRequest(cryptoRequest, context, requestContext)

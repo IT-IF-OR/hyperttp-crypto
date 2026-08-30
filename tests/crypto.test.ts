@@ -210,3 +210,39 @@ describe("crypto plugin", () => {
     }
   });
 });
+
+
+  it("uses crypto options from the HyperTTP client configuration", async () => {
+    const originalNow = Date.now;
+    const originalUuid = crypto.randomUUID;
+    Date.now = () => 1_700_000_000_000;
+    crypto.randomUUID = () => testNonce;
+
+    try {
+      const plugin = withCrypto();
+      const context = {
+        config: {
+          crypto: {
+            hmac: {
+              secret: "secret",
+              nonceHeaderName: "x-nonce",
+              includeHeaders: ["digest"],
+            },
+          },
+        },
+      };
+      await plugin.setup?.(context as never);
+      const result = await plugin.onRequest!(
+        { protocol: "http", input: request },
+        context as never,
+      );
+      const headers = new Headers(pluginInput(result).headers);
+
+      expect(headers.get("digest")).not.toBeNull();
+      expect(headers.get("x-signature")).not.toBeNull();
+      expect(headers.get("x-nonce")).toBe(testNonce);
+    } finally {
+      Date.now = originalNow;
+      crypto.randomUUID = originalUuid;
+    }
+  });
