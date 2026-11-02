@@ -1,0 +1,2 @@
+"use strict";import{bodyToBytes as i,bytesToBase64 as d}from"../utils/encoding.js";export function contentDigest(n={}){return{name:"hyperttp-crypto-digest",phase:"FORMAT",async onRequest(t){if(t.protocol!=="rest")return t;const e=t.input;if(e.body===void 0||e.body===null)return t;const o=n.algorithm??"SHA-256",r=await crypto.subtle.digest(o,i(e.body)),a=d(new Uint8Array(r)),s=new Headers(e.headers);return s.set(n.headerName??"content-digest",`${o.toLowerCase()}=:${a}:`),{...t,input:{...e,headers:s}}}}}
+//# sourceMappingURL=contentDigest.js.map
