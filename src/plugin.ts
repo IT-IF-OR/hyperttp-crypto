@@ -1,7 +1,7 @@
 import type { HyperPlugin, PluginOnRequestResult, SendRequest } from "@hyperttp/types";
-import { contentDigest } from "./contentDigest.js";
-import { hmacSigner } from "./hmacSigner.js";
-import type { HttpRequestInput, WithCryptoOptions } from "../types/index.js";
+import { contentDigest } from "./plugins/contentDigest.js";
+import { hmacSigner } from "./plugins/hmacSigner.js";
+import type { HttpRequestInput, WithCryptoOptions } from "./types/index.js";
 
 declare module "@hyperttp/types" {
   interface HyperClientOptions {
@@ -16,6 +16,7 @@ declare module "@hyperttp/types" {
 function isCryptoRequest(request: SendRequest<unknown>): boolean {
   const input = request.input;
   return (
+    request.protocol === "rest" &&
     typeof input === "object" &&
     input !== null &&
     "url" in input &&
@@ -35,10 +36,10 @@ function asPluginResult(result: PluginOnRequestResult<HttpRequestInput>): Plugin
 
 /**
  * @ru Объединяет генерацию Content-Digest и опциональную HMAC-подпись в один
- * HyperTTP-плагин. Без параметров добавляет только заголовок Digest с SHA-256:
+ * HyperTTP-плагин. Без параметров добавляет только заголовок Content-Digest с SHA-256:
  * HMAC включается исключительно при явной передаче секрета.
  * @en Combines Content-Digest generation and optional HMAC signing into one
- * HyperTTP plugin. Without options it adds only a SHA-256 Digest header:
+ * HyperTTP plugin. Without options it adds only a SHA-256 Content-Digest header:
  * HMAC is enabled only when a secret is explicitly provided.
  *
  * @example
@@ -50,7 +51,7 @@ function asPluginResult(result: PluginOnRequestResult<HttpRequestInput>): Plugin
  *     hmac: {
  *       secret: process.env.HMAC_SECRET!,
  *       nonceHeaderName: "x-nonce",
- *       includeHeaders: ["digest", "content-type"],
+ *       includeHeaders: ["content-digest", "content-type"],
  *     },
  *   }),
  * );
@@ -59,6 +60,7 @@ function asPluginResult(result: PluginOnRequestResult<HttpRequestInput>): Plugin
  * @returns A single HyperTTP plugin that calculates Digest before signing.
  */
 export function withCrypto(options?: WithCryptoOptions): HyperPlugin {
+  const defaultOptions: WithCryptoOptions = {};
   let configuredOptions: WithCryptoOptions | undefined;
   let digestPlugin: ReturnType<typeof contentDigest> | undefined;
   let hmacPlugin: ReturnType<typeof hmacSigner> | undefined;
@@ -75,12 +77,12 @@ export function withCrypto(options?: WithCryptoOptions): HyperPlugin {
     name: "hyperttp-crypto",
     phase: "FORMAT",
     setup(context) {
-      configure(options ?? context.config.crypto ?? {});
+      configure(options ?? context.config.crypto ?? defaultOptions);
     },
     async onRequest(request, context, requestContext) {
       if (!isCryptoRequest(request)) return request;
 
-      configure(options ?? context?.config.crypto ?? {});
+      configure(options ?? context?.config.crypto ?? defaultOptions);
       const cryptoRequest = request as unknown as SendRequest<HttpRequestInput>;
       const digested = digestPlugin?.onRequest
         ? await digestPlugin.onRequest(cryptoRequest, context, requestContext)

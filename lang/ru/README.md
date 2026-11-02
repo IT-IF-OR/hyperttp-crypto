@@ -2,11 +2,11 @@
 
 [English](../../README.md) | Русский
 
-Криптографические плагины для [HyperTTP](https://github.com/dirold2/hyperttp): HTTP `Digest`, HMAC-подпись запросов, проверка подписи и защита от повторного воспроизведения (replay).
+Криптографические плагины для [HyperTTP](https://github.com/dirold2/hyperttp): HTTP `Content-Digest`, HMAC-подпись запросов, проверка подписи и защита от повторного воспроизведения (replay).
 
 ## Возможности
 
-- `contentDigest()` — формирует HTTP-заголовок `Digest` по телу запроса.
+- `contentDigest()` — формирует HTTP-заголовок `Content-Digest` по телу запроса.
 - `hmacSigner()` — подписывает каноническое представление метода, origin, пути с query, тела, timestamp, nonce и выбранных заголовков.
 - `withCrypto()` — единый HyperTTP-плагин, который сначала рассчитывает Digest, затем опционально создаёт HMAC-подпись.
 - `verifyHmac()` — проверяет HMAC и давность timestamp на сервере.
@@ -46,7 +46,7 @@ client.use(
     hmac: {
       secret: process.env.HMAC_SECRET!,
       nonceHeaderName: "x-nonce",
-      includeHeaders: ["digest", "content-type"],
+      includeHeaders: ["content-digest", "content-type"],
     },
   }),
 );
@@ -56,12 +56,14 @@ client.use(
 
 | Заголовок     | Назначение                                        |
 | ------------- | ------------------------------------------------- |
-| `digest`      | Хеш тела в формате HTTP Digest.                   |
+| `content-digest`      | Хеш тела в формате HTTP Content-Digest.                   |
 | `x-timestamp` | Unix-время в миллисекундах, включённое в подпись. |
 | `x-signature` | HMAC в hex-формате.                               |
 | `x-nonce`     | Случайный UUID, если указан `nonceHeaderName`.    |
 
-Если включить `digest` в `includeHeaders`, HMAC защитит и значение Digest. Список и порядок `includeHeaders` должны совпадать у отправителя и проверяющей стороны.
+Если включить `content-digest` в `includeHeaders`, HMAC защитит и значение Digest. Список и порядок `includeHeaders` должны совпадать у отправителя и проверяющей стороны.
+
+`withCrypto()`, `contentDigest()` и `hmacSigner()` обрабатывают только запросы с `protocol: "rest"`. Остальные протоколы (включая WebRTC, gRPC и `http`) проходят без изменений, без подписи и генерации digest.
 
 ## Настройка
 
@@ -99,6 +101,10 @@ client.use(
 
 Для отдельных плагинов используйте `contentDigest(options)` и `hmacSigner(options)`.
 
+Все криптоплагины запросов работают в фазе `FORMAT`. Регистрируйте их после преобразований тела и подписываемых заголовков; при раздельном использовании — сначала `contentDigest()`, затем `hmacSigner()`. После подписи эти данные менять нельзя. Реализация конвейера ядра отсутствует в этом пакете: порядок выполнения необходимо проверить в интеграции с HyperTTP.
+
+**Миграция:** заголовок по умолчанию изменён с `Digest` на `Content-Digest` (RFC 9530). Обновите чтение заголовка и `includeHeaders` до `content-digest` на обеих сторонах. `headerName` меняет только имя заголовка, но не формат структурированного значения.
+
 ## Проверка на сервере
 
 ### HMAC и давность запроса
@@ -121,7 +127,7 @@ const valid = await verifyHmac(
     timestamp: headers.get("x-timestamp") ?? "",
     nonce: headers.get("x-nonce") ?? undefined,
     signature: headers.get("x-signature") ?? "",
-    includeHeaders: ["digest", "content-type"],
+    includeHeaders: ["content-digest", "content-type"],
     maxAgeMs: 5 * 60 * 1000,
   },
 );
@@ -162,7 +168,7 @@ const valid = await verifyIncomingRequest(
   {
     secret: process.env.HMAC_SECRET!,
     nonceStore,
-    includeHeaders: ["digest", "content-type"],
+    includeHeaders: ["content-digest", "content-type"],
     maxAgeMs: 5 * 60 * 1000,
   },
 );
@@ -198,6 +204,8 @@ hyperttp-hmac-v1
 
 Для межъязыковых интеграций передавайте готовое строковое или бинарное тело. `JSON.stringify()` не является стандартом канонизации JSON между различными реализациями.
 
+Неподдерживаемые тела (`FormData`, `Blob`, потоки, циклические объекты, значения вне JSON и объекты с `toJSON`) приводят к `TypeError`. Сначала сериализуйте их в точные байты отправляемого тела.
+
 ## Публичный API
 
 ```ts
@@ -224,7 +232,7 @@ export type {
 - Никогда не передавайте HMAC-секрет в браузерный код, мобильный bundle или публичный репозиторий.
 - Сравнивайте timestamp, используйте nonce и реализуйте атомарное `consume()` для всех запросов, где replay недопустим.
 - Передавайте одинаковые алгоритм, имена заголовков и `includeHeaders` на клиенте и сервере.
-- Подписывайте `digest` и критичные бизнес-заголовки через `includeHeaders`.
+- Подписывайте `content-digest` и критичные бизнес-заголовки через `includeHeaders`.
 - Ротируйте секреты при подозрении на компрометацию.
 
 ## Лицензия

@@ -18,6 +18,8 @@ export function contentDigest(options: ContentDigestOptions = {}): HyperPlugin<H
     phase: "FORMAT",
 
     async onRequest(req) {
+      if (req.protocol !== "rest") return req;
+
       const input = req.input;
       if (input.body === undefined || input.body === null) return req;
 
@@ -26,7 +28,10 @@ export function contentDigest(options: ContentDigestOptions = {}): HyperPlugin<H
       const base64Hash = bytesToBase64(new Uint8Array(hashBuffer));
 
       const headers = new Headers(input.headers);
-      headers.set(options.headerName ?? "digest", `${algorithm.toLowerCase()}=:${base64Hash}:`);
+      headers.set(
+        options.headerName ?? "content-digest",
+        `${algorithm.toLowerCase()}=:${base64Hash}:`,
+      );
 
       return {
         ...req,

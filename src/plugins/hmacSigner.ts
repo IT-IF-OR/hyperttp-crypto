@@ -14,12 +14,12 @@ const encoder = new TextEncoder();
  *   hmacSigner({
  *     secret: process.env.HMAC_SECRET!,
  *     nonceHeaderName: "x-nonce",
- *     includeHeaders: ["digest", "content-type"],
+ *     includeHeaders: ["content-digest", "content-type"],
  *   }),
  * );
  *
  * @param options HMAC secret, algorithm, and header configuration.
- * @returns A HyperTTP request-preparation plugin.
+ * @returns A HyperTTP request-format plugin. Register after body and signed-header transformations.
  */
 export function hmacSigner(options: HmacSignerOptions): HyperPlugin<HttpRequestInput> {
   const algorithm = options.algorithm ?? "SHA-256";
@@ -47,9 +47,11 @@ export function hmacSigner(options: HmacSignerOptions): HyperPlugin<HttpRequestI
 
   return {
     name: "hyperttp-crypto-hmac",
-    phase: "PREPARE",
+    phase: "FORMAT",
 
     async onRequest(req) {
+      if (req.protocol !== "rest") return req;
+
       const timestamp = Date.now().toString();
       const nonce = nonceHeader ? crypto.randomUUID() : undefined;
 

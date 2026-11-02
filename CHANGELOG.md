@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- **Breaking:** the default digest header is now `Content-Digest` (RFC 9530). Update signed `includeHeaders` and header lookups on both sides to `content-digest`.
+- Standalone `hmacSigner()` now runs in `FORMAT`, consistently with `withCrypto()`. Register crypto plugins after body and signed-header transformations.
+- Unsupported runtime body values now throw a `TypeError` instead of being silently serialized as unrelated JSON.
+
+### Fixed
+
+- Corrected the test import after moving `withCrypto()` to `src/plugin.ts`.
+- HMAC verification accepts uppercase hexadecimal signatures.
+- Default `withCrypto()` options no longer recreate the digest plugin on every request.
+
 ## [1.0.2] — 2026-08-30
 
 ### Added

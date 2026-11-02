@@ -3,7 +3,7 @@ export { hmacSigner } from "./plugins/hmacSigner.js";
 export { verifyHmac } from "./plugins/hmacVerifier.js";
 export { verifyIncomingRequest } from "./plugins/incomingRequestVerifier.js";
 export { contentDigest } from "./plugins/contentDigest.js";
-export { withCrypto } from "./plugins/plugin.js";
+export { withCrypto } from "./plugin.js";
 
 // Utilities
 export { timingSafeEqualHex } from "./utils/timingSafe.js";

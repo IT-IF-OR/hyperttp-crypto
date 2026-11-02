@@ -44,5 +44,5 @@ export async function verifyHmac(
   );
   const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(canonicalString));
 
-  return timingSafeEqualHex(bytesToHex(new Uint8Array(signature)), options.signature);
+  return timingSafeEqualHex(bytesToHex(new Uint8Array(signature)), options.signature.toLowerCase());
 }
