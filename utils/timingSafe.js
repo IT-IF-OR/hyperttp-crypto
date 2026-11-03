@@ -1,2 +1,2 @@
-"use strict";export function timingSafeEqualHex(t,n){if(t.length!==n.length)return!1;let r=0;for(let e=0;e<t.length;e++)r|=t.charCodeAt(e)^n.charCodeAt(e);return r===0}
+var h=Object.defineProperty;var l=(e,t)=>h(e,"name",{value:t,configurable:!0});function f(e,t){if(e.length!==t.length)return!1;let r=0;for(let n=0;n<e.length;n++)r|=e.charCodeAt(n)^t.charCodeAt(n);return r===0}l(f,"timingSafeEqualHex");export{f as timingSafeEqualHex};
 //# sourceMappingURL=timingSafe.js.map

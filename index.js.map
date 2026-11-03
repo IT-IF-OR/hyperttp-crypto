@@ -2,6 +2,6 @@
   "version": 3,
   "sources": ["../src/index.ts"],
   "sourcesContent": ["// Plugins\nexport { hmacSigner } from \"./plugins/hmacSigner.js\";\nexport { verifyHmac } from \"./plugins/hmacVerifier.js\";\nexport { verifyIncomingRequest } from \"./plugins/incomingRequestVerifier.js\";\nexport { contentDigest } from \"./plugins/contentDigest.js\";\nexport { withCrypto } from \"./plugin.js\";\n\n// Utilities\nexport { timingSafeEqualHex } from \"./utils/timingSafe.js\";\nexport { buildCanonicalString } from \"./utils/canonical.js\";\nexport { bodyToBytes } from \"./utils/encoding.js\";\n\n// Public types\nexport type {\n  CanonicalOptions,\n  ContentDigestOptions,\n  CryptoBody,\n  DigestAlgorithm,\n  HmacSignerOptions,\n  HmacVerificationOptions,\n  HttpRequestInput,\n  IncomingHmacVerificationOptions,\n  NonceStore,\n  WithCryptoOptions,\n  JsonPrimitive,\n  JsonValue,\n} from \"./types/index.js\";\n"],
-  "mappings": "aACA,OAAS,eAAkB,0BAC3B,OAAS,eAAkB,4BAC3B,OAAS,0BAA6B,uCACtC,OAAS,kBAAqB,6BAC9B,OAAS,eAAkB,cAG3B,OAAS,uBAA0B,wBACnC,OAAS,yBAA4B,uBACrC,OAAS,gBAAmB",
-  "names": []
+  "mappings": "AACA,OAAS,cAAAA,MAAkB,0BAC3B,OAAS,cAAAC,MAAkB,4BAC3B,OAAS,yBAAAC,MAA6B,uCACtC,OAAS,iBAAAC,MAAqB,6BAC9B,OAAS,cAAAC,MAAkB,cAG3B,OAAS,sBAAAC,MAA0B,wBACnC,OAAS,wBAAAC,MAA4B,uBACrC,OAAS,eAAAC,MAAmB",
+  "names": ["hmacSigner", "verifyHmac", "verifyIncomingRequest", "contentDigest", "withCrypto", "timingSafeEqualHex", "buildCanonicalString", "bodyToBytes"]
 }
