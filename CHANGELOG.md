@@ -47,7 +47,6 @@
 
 - Exported plugins and utilities now include bilingual `@ru` and `@en` JSDoc documentation.
 
-
 ### Security
 
 - HMAC canonicalization binds the request method, origin, path and query, timestamp, nonce, body bytes, and explicitly selected headers.
