@@ -1,0 +1,1 @@
+{"version":3,"file":"hmacSigner.d.ts","sourceRoot":"","sources":["../../src/plugins/hmacSigner.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,WAAW,EAAE,MAAM,iBAAiB,CAAC;AAGnD,OAAO,KAAK,EAAE,iBAAiB,EAAE,gBAAgB,EAAE,MAAM,mBAAmB,CAAC;AAI7E;;;;;;;;;;;;;;;GAeG;AACH,wBAAgB,UAAU,CAAC,OAAO,EAAE,iBAAiB,GAAG,WAAW,CAAC,gBAAgB,CAAC,CAmEpF"}
