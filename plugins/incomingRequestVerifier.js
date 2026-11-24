@@ -1,0 +1,2 @@
+"use strict";import{verifyHmac as d}from"./hmacVerifier.js";export async function verifyIncomingRequest(n,e){const a=new Headers(n.headers),s=e.headerName??"x-signature",t=a.get(e.timestampHeaderName??"x-timestamp"),r=a.get(e.nonceHeaderName??"x-nonce"),c=a.get(s),m=e.maxAgeMs??3e5;return!t||!r||!c||!await d(n,{secret:e.secret,algorithm:e.algorithm,includeHeaders:e.includeHeaders,timestamp:t,nonce:r,signature:c,maxAgeMs:m,now:e.now})?!1:e.nonceStore.consume(r,m)}
+//# sourceMappingURL=incomingRequestVerifier.js.map
